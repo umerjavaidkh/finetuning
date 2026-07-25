@@ -31,8 +31,8 @@ def _build_text_dataset(rows, tokenizer):
 
 
 def run_training(config: dict, resume_from_checkpoint: str | None = None) -> None:
-    from trl import SFTConfig, SFTTrainer
     from unsloth import FastLanguageModel
+    from trl import SFTConfig, SFTTrainer
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=config["model_name"],
