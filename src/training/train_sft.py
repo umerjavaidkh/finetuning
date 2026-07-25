@@ -67,6 +67,10 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
     if report_to == "wandb":
         os.environ.setdefault("WANDB_PROJECT", wandb_cfg.get("project", "bilarabi-finetune"))
 
+    import torch
+
+    bf16_supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+
     training_args = TrainingArguments(
         output_dir=t["output_dir"],
         per_device_train_batch_size=t["per_device_train_batch_size"],
@@ -82,8 +86,8 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
         report_to=report_to,
         run_name=wandb_cfg.get("run_name") or os.path.basename(t["output_dir"]),
         eval_strategy="epoch" if eval_dataset is not None else "no",
-        bf16=True,
-        fp16=False,
+        bf16=bf16_supported,
+        fp16=not bf16_supported,
     )
 
     trainer = SFTTrainer(
