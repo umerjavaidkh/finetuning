@@ -24,10 +24,11 @@ The goal: take a curriculum textbook PDF and end up with a model that's good at 
 
 ## Status
 
-- [x] Dataset-prep pipeline: PDF extraction → quality gating → SFT candidate building → teacher-model generation → LLM-judge scoring, 75 unit tests
+- [x] Dataset-prep pipeline: PDF extraction → quality gating → SFT candidate building → teacher-model generation → LLM-judge scoring, 93 unit tests
 - [x] Validated end-to-end on 2 real books → 593 quality-gated training pairs (69.5% and 66.1% judge-acceptance rates)
 - [x] Training: QLoRA fine-tune of Qwen3-8B on Kaggle (T4×2), 2 epochs, 848 training examples — see [Training Run](#training-run) below
 - [x] Evaluation: base vs. fine-tuned, judge-scored on 20 held-out prompts — see [Evaluation](#evaluation) below
+- [ ] Closed-book eval built (memorization vs. generalization check), not yet run on GPU — see [Closed-book eval](#closed-book-eval-knowledge-injection-vs-style-specialization) below
 - [ ] Model + adapter published to Hugging Face
 
 ## Training Run
@@ -66,6 +67,35 @@ Mixed, honest result — not a clean sweep, which is the expected shape for a 2-
 Train loss dropped by more than half (1.861 → 0.887) while eval loss on the held-out split barely moved (1.209 → 1.192, if anything drifting slightly worse). That gap is the textbook signature of memorization rather than generalization: the model is fitting the specific training examples increasingly well without getting better at producing correct output for lessons it hasn't seen. This tracks with the blueprint's own stated risk (§2.4) that a small, single-domain SFT set (~500 unique examples here, oversampled to 848 to fill the training budget) is prone to exactly this failure mode — there just isn't enough distinct signal for 2 epochs to generalize instead of memorize.
 
 Practically, this means the win/tie/loss result above is likely close to the ceiling for this data volume — the fix is more unique curriculum coverage (more books/lessons), not more epochs on the same ~500 examples, and per-checkpoint eval (rather than judging only the final checkpoint) would help catch the point where memorization starts outpacing generalization.
+
+### Closed-book eval: knowledge injection vs. style specialization
+
+Every result above is **open-book** — both models always got the curriculum context handed to them in the prompt. That's by design (per the blueprint, fine-tuning is scoped to style/structure, not knowledge injection — RAG's job), but it leaves an open question the loss-divergence finding raises directly: since fine-tuning was on text derived from copyrighted curriculum pages, did the model memorize specific facts it could leak even without being given context?
+
+`src/training/closed_book_eval.py` tests this directly: it asks for a lesson's content by unit/lesson label only — no objectives, no source text — the way you'd ask a RAG chatbot a question before retrieval runs. It's run twice per model, once on lessons the model **was** trained on (`train_seen`) and once on the held-out lessons it **never saw** (`val_heldout`), then scores word-overlap between the closed-book output and the real reference content. `scripts/compare_closed_book.py` turns that into two numbers:
+
+- **`memorization_gap_train_seen`** (tuned − base, on seen lessons): large positive = the tuned model is reciting specific facts it was never given in-prompt — a real memorization/leakage signal, not a good one.
+- **`generalization_gap_val_heldout`** (tuned − base, on never-seen lessons): should stay near zero — if fine-tuning is working as scoped, the tuned model shouldn't know anything about lessons it never trained on, same as base.
+
+```bash
+# Run once per model (base, then the fine-tuned adapter) — needs a GPU (Kaggle)
+python src/training/closed_book_eval.py \
+  --config configs/sft.yaml \
+  --model-path Qwen/Qwen3-8B \
+  --train-path data/extracted/train.jsonl --val-path data/extracted/val.jsonl \
+  --sample-size 10 --output data/extracted/closed_book_base.jsonl
+
+python src/training/closed_book_eval.py \
+  --config configs/sft.yaml \
+  --model-path outputs/sft_run \
+  --train-path data/extracted/train.jsonl --val-path data/extracted/val.jsonl \
+  --sample-size 10 --output data/extracted/closed_book_tuned.jsonl
+
+python scripts/compare_closed_book.py \
+  --base data/extracted/closed_book_base.jsonl --tuned data/extracted/closed_book_tuned.jsonl
+```
+
+Not yet run against the actual Kaggle-trained checkpoint — the overlap-score logic and prompt builder are unit-tested, but the real numbers require GPU inference and are a follow-up.
 
 ## Pipeline
 
