@@ -8,9 +8,19 @@ RAG retrieves curriculum context; this fine-tuned model generates in-style, indi
 
 - [x] Dataset-prep pipeline: PDF extraction → quality gating → SFT candidate building → teacher-model generation → LLM-judge scoring, 75 unit tests
 - [x] Validated end-to-end on 2 real books → 593 quality-gated training pairs (69.5% and 66.1% judge-acceptance rates)
-- [ ] Training (QLoRA config ready in `configs/sft.yaml`, not yet run — needs a GPU)
-- [ ] Evaluation (base vs. fine-tuned comparison)
+- [x] Training: QLoRA fine-tune of Qwen3-8B on Kaggle (T4×2), 2 epochs, 848 training examples — see [Training Run](#training-run) below
+- [ ] Evaluation (base vs. fine-tuned comparison) — in progress
 - [ ] Model + adapter published to Hugging Face
+
+## Training Run
+
+QLoRA (r=16) fine-tune of `Qwen/Qwen3-8B`, run on a Kaggle T4×2 kernel per `configs/sft.yaml`. 106 steps over 2 epochs, `train_loss` 1.15, held-out `eval_loss` improved epoch-over-epoch (1.209 → 1.192).
+
+| Start | End |
+|---|---|
+| ![Training start](training_images/training_start.png) | ![Training end](training_images/training_end.png) |
+
+Checkpointed every 20 steps for resumability; final adapter saved to `outputs/sft_run/`.
 
 ## Pipeline
 
