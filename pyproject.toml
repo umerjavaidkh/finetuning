@@ -1,0 +1,8 @@
+[project]
+name = "bilarabi-finetune"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["pymupdf", "openai", "python-dotenv"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

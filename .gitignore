@@ -1,0 +1,12 @@
+books_data/
+data/extracted/
+data/raw/
+*.pdf
+*.docx
+*.xlsx
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.env
+.env
