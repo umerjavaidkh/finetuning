@@ -4,6 +4,24 @@ Production-grade LLM specialization pipeline for Arabic curriculum content gener
 
 RAG retrieves curriculum context; this fine-tuned model generates in-style, indicator-aligned educational artifacts (exams, worksheets, lesson plans, vocabulary activities, grammar explanations) grounded in that context. See [`finetuning-blueprint.md`](finetuning-blueprint.md) for the full design.
 
+## How It Works
+
+The goal: take a curriculum textbook PDF and end up with a model that's good at writing exams, worksheets, and lesson plans in that book's exact style.
+
+1. **Extraction — turn the PDF into clean text.** We pull text page by page and drop anything unusable: title pages, tables of contents, grading rubrics, and pages where the PDF's text layer is garbled (would need OCR). In one book, 186 of 239 pages passed this quality gate. Each surviving chunk of text is tagged with its unit/lesson.
+
+2. **Dataset (candidate) building — figure out what to ask for.** For each usable page we look at what's there (learning objectives, vocabulary lists, grammar rules, time estimates) and decide what kind of teaching material it could become — an exam, a worksheet, a set of questions tied to a learning objective, a lesson plan, a grammar explanation, or a vocabulary activity. This turns pages into ~500 "candidates," each one an instruction like "using this context, write an exam."
+
+3. **Generation (the "teacher") — have a smarter/cheaper model write the answer.** Each candidate is sent to GPT-4o-mini (the teacher model), which writes the actual exam/worksheet/etc. using only the given curriculum context — nothing invented. This produces the raw (context → generated content) training pairs.
+
+4. **Judge — quality control before anything is trusted.** Every generated pair is scored by another LLM call acting as a strict grader, on 5 criteria (language correctness, curriculum fidelity, structural adherence, level calibration, usability). Anything below the bar is rejected. Final acceptance rates: 69.5% and 66.1% across the two books — roughly a third of what the teacher generated wasn't good enough to train on.
+
+5. **Dataset assembly — split into train vs. test fairly.** Judge-accepted pairs from both books are combined, then a held-out set is carved out for testing — by *lesson*, not randomly, so the model can't "cheat" by seeing 90% of a lesson during training and being tested on the other 10%. Result: 848 training examples, 20 held-out validation examples never seen during training.
+
+6. **Training — actually teach the model.** A general-purpose model (Qwen3-8B) is fine-tuned using QLoRA, a lightweight technique that only trains a small set of "adapter" weights instead of the whole model, so it fits on a free Kaggle GPU. It runs through the 848 examples twice (2 epochs), with loss dropping from 1.86 to 0.89.
+
+7. **Validation / evaluation — did it actually get better?** Both the original base model and the fine-tuned model generate answers on the same 20 held-out prompts, and the judge scores both, blind. Result: 9 wins / 3 ties / 8 losses for the fine-tuned model — a mixed, not a clean-sweep result (see [Evaluation](#evaluation) below for why, including a real memorization-vs-generalization finding).
+
 ## Status
 
 - [x] Dataset-prep pipeline: PDF extraction → quality gating → SFT candidate building → teacher-model generation → LLM-judge scoring, 75 unit tests
