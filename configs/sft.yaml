@@ -26,7 +26,9 @@ training:
   gradient_accumulation_steps: 8
   gradient_checkpointing: true
   seed: 42
-  save_strategy: epoch
+  save_strategy: steps
+  save_steps: 20
+  save_total_limit: 5
   logging_steps: 10
   output_dir: "outputs/sft_run"
 
