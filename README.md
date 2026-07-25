@@ -73,4 +73,4 @@ python -m pytest tests/ -v
 
 ## IP note
 
-Source curriculum PDFs and all extracted/generated data are excluded from this repo (see `.gitignore`). Only pipeline code is public — no book text, no generated training pairs.
+Source curriculum PDFs and the full extracted/generated dataset are excluded from this repo (see `.gitignore`). Only pipeline code is public, plus a small illustrative sample — see [`data/sample/`](data/sample/) for 6 SFT training pairs and 3 base-vs-tuned eval comparisons with a full datacard (schema, filter stats, limitations, license note). No full book pages, chapters, or the source PDF are included anywhere in this repo.
