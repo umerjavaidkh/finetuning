@@ -1,4 +1,4 @@
-model_name: "Qwen/Qwen3-8B-Instruct"
+model_name: "Qwen/Qwen3-8B"
 max_seq_length: 4096
 load_in_4bit: true
 dtype: null  # let Unsloth auto-detect (bf16 on Ampere+, fp16 on T4)

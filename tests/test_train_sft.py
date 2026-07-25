@@ -16,7 +16,7 @@ def _write_jsonl(tmp_path, rows):
 
 def test_load_config_reads_real_sft_yaml():
     config = load_config(CONFIG_PATH)
-    assert config["model_name"] == "Qwen/Qwen3-8B-Instruct"
+    assert config["model_name"] == "Qwen/Qwen3-8B"
     assert config["lora"]["r"] == 16
     assert config["lora"]["alpha"] == 32
     assert set(config["lora"]["target_modules"]) == {

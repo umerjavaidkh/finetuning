@@ -40,6 +40,7 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
         max_seq_length=config["max_seq_length"],
         dtype=config.get("dtype"),
         load_in_4bit=config["load_in_4bit"],
+        token=os.environ.get("HF_TOKEN"),
     )
 
     lora_cfg = config["lora"]
