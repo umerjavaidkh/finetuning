@@ -64,7 +64,7 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
     wandb_cfg = config.get("wandb", {})
     report_to = "wandb" if wandb_cfg.get("enabled") else "none"
     if report_to == "wandb":
-        os.environ.setdefault("WANDB_PROJECT", wandb_cfg.get("project", "bilarabi-finetune"))
+        os.environ.setdefault("WANDB_PROJECT", wandb_cfg.get("project", "arabic-curriculum-finetune"))
 
     import torch
 
@@ -108,7 +108,7 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BilArabi QLoRA SFT training (Unsloth + TRL)")
+    parser = argparse.ArgumentParser(description="Arabic curriculum QLoRA SFT training (Unsloth + TRL)")
     parser.add_argument("--config", required=True)
     parser.add_argument("--resume-from-checkpoint", default=None)
     args = parser.parse_args()

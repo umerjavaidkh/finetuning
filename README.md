@@ -1,8 +1,8 @@
-# BilArabi Fine-Tuning
+# منهاجي — Arabic Curriculum Fine-Tuning
 
 Production-grade LLM specialization pipeline for Arabic curriculum content generation. Part of a portfolio triad: RAG ([agentic_graph_rag](https://github.com/umerjavaidkh)) · Agents · **Fine-Tuning (this repo)**.
 
-RAG retrieves curriculum context; this fine-tuned model generates in-style, indicator-aligned educational artifacts (exams, worksheets, lesson plans, vocabulary activities, grammar explanations) grounded in that context. See [`bilarabi-finetuning-blueprint.md`](bilarabi-finetuning-blueprint.md) for the full design.
+RAG retrieves curriculum context; this fine-tuned model generates in-style, indicator-aligned educational artifacts (exams, worksheets, lesson plans, vocabulary activities, grammar explanations) grounded in that context. See [`finetuning-blueprint.md`](finetuning-blueprint.md) for the full design.
 
 ## Status
 
@@ -37,6 +37,17 @@ Base `Qwen/Qwen3-8B` vs. the fine-tuned adapter, both generating on the same 20 
 **Win / tie / loss** (fine-tuned vs. base, by overall average): 9 wins, 3 ties, 8 losses.
 
 Mixed, honest result — not a clean sweep, which is the expected shape for a 2-epoch fine-tune on fewer than 900 examples. The real, structural story: base `Qwen3-8B` emits a `<think>...</think>` reasoning block by default, which frequently consumed most of the generation budget and left the actual answer truncated mid-sentence. Fine-tuning (on targets that never contained visible reasoning) taught the model to emit an empty `<think></think>` and go straight to a complete, correctly-structured answer — this is exactly what shows up as the `structural_adherence` and `curriculum_fidelity` gains. The `language_correctness` regression is a real, unresolved caveat, most likely from the small training set introducing occasional grammatical rough edges; worth investigating before scaling up training data or claiming a win.
+
+### Training vs. eval loss: a memorization signature
+
+| Step | Train loss | Eval loss |
+|---|---|---|
+| Early | 1.861 | 1.209 |
+| Final | 0.887 | 1.192 |
+
+Train loss dropped by more than half (1.861 → 0.887) while eval loss on the held-out split barely moved (1.209 → 1.192, if anything drifting slightly worse). That gap is the textbook signature of memorization rather than generalization: the model is fitting the specific training examples increasingly well without getting better at producing correct output for lessons it hasn't seen. This tracks with the blueprint's own stated risk (§2.4) that a small, single-domain SFT set (~500 unique examples here, oversampled to 848 to fill the training budget) is prone to exactly this failure mode — there just isn't enough distinct signal for 2 epochs to generalize instead of memorize.
+
+Practically, this means the win/tie/loss result above is likely close to the ceiling for this data volume — the fix is more unique curriculum coverage (more books/lessons), not more epochs on the same ~500 examples, and per-checkpoint eval (rather than judging only the final checkpoint) would help catch the point where memorization starts outpacing generalization.
 
 ## Pipeline
 

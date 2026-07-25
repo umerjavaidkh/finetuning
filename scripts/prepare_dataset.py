@@ -16,7 +16,7 @@ from datagen.pipeline import (
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BilArabi dataset preparation pipeline")
+    parser = argparse.ArgumentParser(description="Arabic curriculum dataset preparation pipeline")
     parser.add_argument("--pdf", required=True, help="Path to a source book PDF")
     parser.add_argument("--grade-level", type=int, default=None)
     parser.add_argument("--doc-id", default=None)

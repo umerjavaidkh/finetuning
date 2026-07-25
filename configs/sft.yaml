@@ -38,5 +38,5 @@ data:
 
 wandb:
   enabled: false
-  project: "bilarabi-finetune"
+  project: "arabic-curriculum-finetune"
   run_name: null  # defaults to output_dir basename if unset

@@ -1,7 +1,7 @@
-# BilArabi Fine-Tuning Blueprint
+# Arabic Curriculum Fine-Tuning Blueprint
 ### Production-Grade LLM Specialization for Arabic Curriculum Content — 0 → 100 Plan
 
-> **Purpose of this document:** A grounded, end-to-end execution blueprint for building a public, recruiter-facing fine-tuning repository using BilArabi curriculum data — with minimal (near-zero) compute cost, industry-grade practices, and clean IP separation.
+> **Purpose of this document:** A grounded, end-to-end execution blueprint for building a public, recruiter-facing fine-tuning repository using Arabic curriculum data — with minimal (near-zero) compute cost, industry-grade practices, and clean IP separation.
 >
 > **Portfolio triad:** RAG (agentic_graph_rag) · Agents · **Fine-Tuning (this repo)**
 >
@@ -16,7 +16,7 @@
 | Fine-tuning IS for | Fine-tuning is NOT for |
 |---|---|
 | Task specialization (exam/worksheet generation) | Knowledge injection (facts of the book) |
-| Output format compliance (BilArabi house style) | Replacing retrieval |
+| Output format compliance (curriculum house style) | Replacing retrieval |
 | Register/style (MSA educational Arabic) | Cross-chapter linking (that's the graph's job) |
 | Consistent structure (answer keys, timings, indicators) | Up-to-date content |
 
@@ -24,7 +24,7 @@
 
 ### 0.2 The model's job (task definition)
 
-> Given curriculum context (lesson content, indicator text, grammar topic, level), generate BilArabi-style outputs:
+> Given curriculum context (lesson content, indicator text, grammar topic, level), generate curriculum-style outputs:
 > 1. Exams with answer keys (امتحان + مفتاح الإجابة)
 > 2. Worksheets (أوراق عمل)
 > 3. Indicator-aligned question sets (أسئلة مرتبطة بمؤشر تعلّم)
@@ -127,7 +127,7 @@ raw generations (≈12k)
 
 - `data/sample/` — 50–100 public synthetic pairs (JSONL)
 - `data/README.md` — **datacard**: schema, generation prompts (link), filter statistics, known limitations, license note
-- Versioned JSONL naming: `bilarabi_sft_v{N}_{date}.jsonl` + config hash
+- Versioned JSONL naming: `curriculum_sft_v{N}_{date}.jsonl` + config hash
 
 ---
 
@@ -224,12 +224,12 @@ Pick by **val-set judge score**, not loss alone. One README sentence: *"Final ch
 
 **Path A — Local / edge (Ollama):**
 ```
-merge adapter → quantize GGUF Q4_K_M → Modelfile → ollama run bilarabi-teacher
+merge adapter → quantize GGUF Q4_K_M → Modelfile → ollama run curriculum-teacher
 ```
 
 **Path B — Production (vLLM + hot-swappable LoRA):**
 ```
-vllm serve Qwen/Qwen3-8B-Instruct --enable-lora --lora-modules bilarabi=./adapter
+vllm serve Qwen/Qwen3-8B-Instruct --enable-lora --lora-modules curriculum=./adapter
 ```
 Serving base + swappable adapters is the current production pattern — demonstrating it is a differentiator.
 
@@ -251,7 +251,7 @@ Serving base + swappable adapters is the current production pattern — demonstr
 What separates "notebook" from "repo":
 
 ```
-bilarabi-finetune/
+arabic-curriculum-finetune/
 ├── Makefile                    # dataset / train / eval / serve / all
 ├── configs/                    # YAML per run (pydantic-settings or Hydra)
 ├── src/
