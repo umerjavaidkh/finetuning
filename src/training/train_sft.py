@@ -31,8 +31,7 @@ def _build_text_dataset(rows, tokenizer):
 
 
 def run_training(config: dict, resume_from_checkpoint: str | None = None) -> None:
-    from transformers import TrainingArguments
-    from trl import SFTTrainer
+    from trl import SFTConfig, SFTTrainer
     from unsloth import FastLanguageModel
 
     model, tokenizer = FastLanguageModel.from_pretrained(
@@ -71,8 +70,10 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
 
     bf16_supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
 
-    training_args = TrainingArguments(
+    training_args = SFTConfig(
         output_dir=t["output_dir"],
+        dataset_text_field="text",
+        max_length=config["max_seq_length"],
         per_device_train_batch_size=t["per_device_train_batch_size"],
         gradient_accumulation_steps=t["gradient_accumulation_steps"],
         num_train_epochs=t["num_train_epochs"],
@@ -92,11 +93,9 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        dataset_text_field="text",
-        max_seq_length=config["max_seq_length"],
         args=training_args,
     )
 
