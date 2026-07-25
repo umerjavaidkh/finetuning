@@ -75,6 +75,7 @@ def run_training(config: dict, resume_from_checkpoint: str | None = None) -> Non
         dataset_text_field="text",
         max_length=config["max_seq_length"],
         per_device_train_batch_size=t["per_device_train_batch_size"],
+        per_device_eval_batch_size=t.get("per_device_eval_batch_size", t["per_device_train_batch_size"]),
         gradient_accumulation_steps=t["gradient_accumulation_steps"],
         num_train_epochs=t["num_train_epochs"],
         learning_rate=t["learning_rate"],
